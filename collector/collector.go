@@ -329,7 +329,7 @@ func (c *eCollector) Collect(ch chan<- prometheus.Metric) {
 				c.forecastTempLow, prometheus.GaugeValue, float64(forecast.TempLow)/10, tFields...,
 			)
 
-			skyConditionStr := getSkyConditions()[int(forecast.Sky)]
+			skyConditionStr := getSkyCondition(int(forecast.Sky))
 			ch <- prometheus.MustNewConstMetric(
 				c.forecastSky, prometheus.GaugeValue, 1, t.Identifier, t.Name, skyConditionStr,
 			)
@@ -383,8 +383,8 @@ func (c *eCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func getSkyConditions() []string {
-	return []string{
+func getSkyCondition(sky int) string {
+	skyConditions := []string{
 		"UNDEFINED",
 		"SUNNY",
 		"CLEAR",
@@ -420,5 +420,13 @@ func getSkyConditions() []string {
 		"MORNING_CLOUDS",
 		"SMOKE",
 		"LOW_LEVEL_HAZE",
+	}
+	skyConditionsMax := len(skyConditions)
+
+	if sky < 0 || sky >= skyConditionsMax {
+		log.Errorln("invalid value for `sky`: ", sky)
+		return skyConditions[0]
+	} else {
+		return skyConditions[sky]
 	}
 }
